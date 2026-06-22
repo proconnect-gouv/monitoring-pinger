@@ -14,6 +14,9 @@ export class Incident {
     @Column()
     cause: string;
 
+    @Column({ default: false })
+    hasBeenNotified: boolean;
+
     @CreateDateColumn({ type: 'timestamptz' })
     startedAt: string;
 

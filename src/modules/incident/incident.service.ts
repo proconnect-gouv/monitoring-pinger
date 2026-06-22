@@ -37,10 +37,13 @@ function buildIncidentService() {
                     order: { startedAt: 'DESC' },
                 });
                 if (!!ongoingIncident) {
-                    ongoingIncident.endedAt = new Date().toISOString();
-                    await incidentRepository.update(ongoingIncident.id, ongoingIncident);
+                    const incidentEndTime = new Date().toISOString();
+                    await incidentRepository.update(ongoingIncident.id, {
+                        endedAt: incidentEndTime,
+                        hasBeenNotified: true,
+                    });
                     const duration =
-                        new Date(ongoingIncident.endedAt).getTime() -
+                        new Date(incidentEndTime).getTime() -
                         new Date(ongoingIncident.startedAt).getTime();
                     if (duration > INCIDENT_DURATION_THRESHOLD) {
                         await matrix.sendMessage(
@@ -59,6 +62,9 @@ function buildIncidentService() {
             where: { endedAt: IsNull() },
         });
         for (const incident of ongoingIncidents) {
+            if (incident.hasBeenNotified) {
+                continue;
+            }
             const duration = new Date().getTime() - new Date(incident.startedAt).getTime();
             if (duration > INCIDENT_DURATION_THRESHOLD) {
                 await matrix.sendMessage(
@@ -66,6 +72,7 @@ function buildIncidentService() {
                         duration / 1000 / 60,
                     )} minutes.`,
                 );
+                await incidentRepository.update(incident.id, { hasBeenNotified: true });
             }
         }
     }
