@@ -3,8 +3,9 @@ import { dataSource } from '../../dataSource';
 import { incidentDtoType } from './incident.dto';
 import { Incident } from './incident.entity';
 import { matrix } from '../../lib/matrix';
+import { config } from '../../config';
 
-const INCIDENT_DURATION_THRESHOLD = 1 * 60 * 1000; // 1 minute
+const INCIDENT_DURATION_THRESHOLD = 10 * 60 * 1000; // 10 minutes
 
 function buildIncidentService() {
     const incidentRepository = dataSource.getRepository(Incident);
@@ -26,6 +27,12 @@ function buildIncidentService() {
                     startedAt: new Date().toISOString(),
                     endedAt: null,
                 });
+                if (incidentDto.monitorGroup === config.SENSITIVE_MONITOR_GROUP) {
+                    await matrix.sendMessage(
+                        `Incident for monitor ${incidentDto.monitorFriendlyName} (${incidentDto.monitorGroup}) has started. Cause: ${incidentDto.alertDetails}`,
+                    );
+                    newIncident.hasBeenNotified = true;
+                }
                 await incidentRepository.save(newIncident);
                 break;
             case 'Up':
@@ -59,18 +66,13 @@ function buildIncidentService() {
 
     async function checkAllIncidents() {
         const ongoingIncidents = await incidentRepository.find({
-            where: { endedAt: IsNull() },
+            where: { endedAt: IsNull(), hasBeenNotified: false },
         });
         for (const incident of ongoingIncidents) {
-            if (incident.hasBeenNotified) {
-                continue;
-            }
             const duration = new Date().getTime() - new Date(incident.startedAt).getTime();
             if (duration > INCIDENT_DURATION_THRESHOLD) {
                 await matrix.sendMessage(
-                    `Incident for monitor ${incident.monitorName} is still ongoing. It has lasted ${Math.round(
-                        duration / 1000 / 60,
-                    )} minutes.`,
+                    `Incident for monitor ${incident.monitorName} has started ${Math.round(duration / 1000 / 60)} minutes ago.`,
                 );
                 await incidentRepository.update(incident.id, { hasBeenNotified: true });
             }

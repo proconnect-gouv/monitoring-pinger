@@ -36,6 +36,7 @@ const config = {
     DEFAULT_ROOM_ID: process.env.DEFAULT_ROOM_ID || '',
     TCHAP_USERNAME: process.env.TCHAP_USERNAME || '',
     TCHAP_PASSWORD: process.env.TCHAP_PASSWORD || '',
+    SENSITIVE_MONITOR_GROUP: process.env.SENSITIVE_MONITOR_GROUP || '',
     ...databaseConfig,
 };
 
