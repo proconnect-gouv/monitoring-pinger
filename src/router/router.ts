@@ -1,7 +1,6 @@
 import Express, { RequestHandler } from 'express';
 import { buildAuthenticatedController } from './lib/buildController';
 import { routes } from './routes';
-import { notificationService } from '../lib/notification';
 
 const router = buildRouter();
 
@@ -15,11 +14,6 @@ function buildRouter() {
 
         router[route.method](route.path, [...(route.middlewares || [])], builtController);
     }
-
-    router.get('/test', async (req, res) => {
-        const response = await notificationService.postMessage('TEST');
-        res.status(200).send(response);
-    });
 
     return router;
 }

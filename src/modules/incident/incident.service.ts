@@ -2,8 +2,8 @@ import { IsNull } from 'typeorm';
 import { dataSource } from '../../dataSource';
 import { incidentDtoType } from './incident.dto';
 import { Incident } from './incident.entity';
-import { matrix } from '../../lib/matrix';
 import { config } from '../../config';
+import { notificationService } from '../../lib/notification';
 
 const INCIDENT_DURATION_THRESHOLD = 10 * 60 * 1000; // 10 minutes
 
@@ -28,7 +28,7 @@ function buildIncidentService() {
                     endedAt: null,
                 });
                 if (incidentDto.monitorGroup === config.SENSITIVE_MONITOR_GROUP) {
-                    await matrix.sendMessage(
+                    await notificationService.postMessage(
                         `Incident for monitor ${incidentDto.monitorFriendlyName} (${incidentDto.monitorGroup}) has started. Cause: ${incidentDto.alertDetails}`,
                     );
                     newIncident.hasBeenNotified = true;
@@ -53,7 +53,7 @@ function buildIncidentService() {
                         new Date(incidentEndTime).getTime() -
                         new Date(ongoingIncident.startedAt).getTime();
                     if (duration > INCIDENT_DURATION_THRESHOLD) {
-                        await matrix.sendMessage(
+                        await notificationService.postMessage(
                             `Incident for monitor ${ongoingIncident.monitorName} is now resolved. It lasted ${Math.round(
                                 duration / 1000 / 60,
                             )} minutes.`,
@@ -71,10 +71,12 @@ function buildIncidentService() {
         for (const incident of ongoingIncidents) {
             const duration = new Date().getTime() - new Date(incident.startedAt).getTime();
             if (duration > INCIDENT_DURATION_THRESHOLD) {
-                await matrix.sendMessage(
+                const hasSucceeded = await notificationService.postMessage(
                     `Incident for monitor ${incident.monitorName} has started ${Math.round(duration / 1000 / 60)} minutes ago.`,
                 );
-                await incidentRepository.update(incident.id, { hasBeenNotified: true });
+                if (hasSucceeded) {
+                    await incidentRepository.update(incident.id, { hasBeenNotified: true });
+                }
             }
         }
     }

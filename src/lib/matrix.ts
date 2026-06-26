@@ -17,7 +17,6 @@ function buildMatrix() {
         if (!client) {
             throw new Error(`Client not initialized ; could not send message`);
         }
-        console.info(`Sending message to matrix: ${message}`);
         return client.sendMessage(config.DEFAULT_ROOM_ID, {
             body: message,
             msgtype: 'm.text',
