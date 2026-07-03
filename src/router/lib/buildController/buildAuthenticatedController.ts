@@ -24,8 +24,6 @@ function buildAuthenticatedController<
     },
 ) {
     return async (req: Request, res: Response) => {
-        logger.info(`${req.method} ${req.originalUrl}`);
-
         try {
             assertIsAuthenticated(req);
         } catch (error) {

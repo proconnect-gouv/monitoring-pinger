@@ -4,8 +4,9 @@ import { incidentDtoType } from './incident.dto';
 import { Incident } from './incident.entity';
 import { config } from '../../config';
 import { notificationService } from '../../lib/notification';
+import { logger } from '../../lib/logger';
 
-const INCIDENT_DURATION_THRESHOLD = 10 * 60 * 1000; // 10 minutes
+const INCIDENT_DURATION_THRESHOLD = config.INCIDENT_MINUTES_THRESHOLD * 60 * 1000;
 
 function buildIncidentService() {
     const incidentRepository = dataSource.getRepository(Incident);
@@ -27,12 +28,20 @@ function buildIncidentService() {
                     startedAt: new Date().toISOString(),
                     endedAt: null,
                 });
-                if (incidentDto.monitorGroup === config.SENSITIVE_MONITOR_GROUP) {
+                const isSensitiveMonitor =
+                    incidentDto.monitorGroup === config.SENSITIVE_MONITOR_GROUP;
+
+                if (isSensitiveMonitor) {
                     await notificationService.postMessage(
-                        `Incident for monitor ${incidentDto.monitorFriendlyName} (${incidentDto.monitorGroup}) has started. Cause: ${incidentDto.alertDetails}`,
+                        `Incident for sensitive monitor ${incidentDto.monitorFriendlyName} (${incidentDto.monitorGroup}) has started. Cause: ${incidentDto.alertDetails}`,
                     );
                     newIncident.hasBeenNotified = true;
+                } else {
+                    logger.info(
+                        `Monitor ${incidentDto.monitorFriendlyName} (${incidentDto.monitorGroup}) is down. Cause: ${incidentDto.alertDetails}. No notification sent because it is not a sensitive monitor.`,
+                    );
                 }
+
                 await incidentRepository.save(newIncident);
                 break;
             case 'Up':
@@ -58,7 +67,17 @@ function buildIncidentService() {
                                 duration / 1000 / 60,
                             )} minutes.`,
                         );
+                    } else {
+                        logger.info(
+                            `Incident for monitor ${ongoingIncident.monitorName} is now resolved. It lasted ${Math.round(
+                                duration / 1000 / 60,
+                            )} minutes. No notification sent because it was below the threshold (${config.INCIDENT_MINUTES_THRESHOLD} minutes).`,
+                        );
                     }
+                } else {
+                    logger.info(
+                        `There was no ongoing incident for monitor ${incidentDto.monitorFriendlyName} (${incidentDto.monitorGroup}) to resolve.`,
+                    );
                 }
                 break;
         }

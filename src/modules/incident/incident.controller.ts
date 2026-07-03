@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import { incidentDtoType } from './incident.dto';
 import { incidentService } from './incident.service';
 
@@ -6,7 +7,7 @@ const incidentController = {
 };
 
 async function upsertIncident(params: { query: incidentDtoType }) {
-    console.log(
+    logger.info(
         `Received incident update for monitor ${params.query.monitorFriendlyName} (${params.query.monitorGroup}) with status ${params.query.alertTypeFriendlyName}`,
     );
     return incidentService.upsertIncident(params.query);

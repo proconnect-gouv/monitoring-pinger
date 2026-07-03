@@ -37,6 +37,9 @@ const config = {
     TCHAP_USERNAME: process.env.TCHAP_USERNAME || '',
     TCHAP_PASSWORD: process.env.TCHAP_PASSWORD || '',
     SENSITIVE_MONITOR_GROUP: process.env.SENSITIVE_MONITOR_GROUP || '',
+    INCIDENT_MINUTES_THRESHOLD: process.env.INCIDENT_MINUTES_THRESHOLD
+        ? Number(process.env.INCIDENT_MINUTES_THRESHOLD)
+        : 5,
     ...databaseConfig,
 };
 

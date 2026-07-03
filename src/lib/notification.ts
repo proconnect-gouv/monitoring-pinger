@@ -6,7 +6,7 @@ const notificationService = {
 
 async function postMessage(message: string): Promise<boolean> {
     try {
-        console.info(`Sending message to matrix: ${message}`);
+        console.info(`Sending message to matrix: "${message}"`);
         const eventId = await matrix.sendMessage(message);
         console.info(`Message sent to matrix with event ID: ${eventId}`);
         return true;
