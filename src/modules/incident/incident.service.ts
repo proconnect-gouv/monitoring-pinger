@@ -33,7 +33,7 @@ function buildIncidentService() {
 
                 if (isSensitiveMonitor) {
                     await notificationService.postMessage(
-                        `Incident for sensitive monitor ${incidentDto.monitorFriendlyName} (${incidentDto.monitorGroup}) has started. Cause: ${incidentDto.alertDetails}`,
+                        `**Un incident pour la sonde sensible "${incidentDto.monitorFriendlyName}" (${incidentDto.monitorGroup}) a commencé.** Cause : ${incidentDto.alertDetails}`,
                     );
                     newIncident.hasBeenNotified = true;
                 } else {
@@ -62,10 +62,10 @@ function buildIncidentService() {
                         new Date(incidentEndTime).getTime() -
                         new Date(ongoingIncident.startedAt).getTime();
                     if (duration > INCIDENT_DURATION_THRESHOLD) {
+                        const readableDuration = convertMillisecondsToReadableDuration(duration);
+
                         await notificationService.postMessage(
-                            `Incident for monitor ${ongoingIncident.monitorName} is now resolved. It lasted ${Math.round(
-                                duration / 1000 / 60,
-                            )} minutes.`,
+                            `L'incident pour la sonde "${ongoingIncident.monitorName}" est maintenant résolu. Il a duré ${readableDuration}.`,
                         );
                     } else {
                         logger.info(
@@ -90,13 +90,26 @@ function buildIncidentService() {
         for (const incident of ongoingIncidents) {
             const duration = new Date().getTime() - new Date(incident.startedAt).getTime();
             if (duration > INCIDENT_DURATION_THRESHOLD) {
+                const readableDuration = convertMillisecondsToReadableDuration(duration);
                 const hasSucceeded = await notificationService.postMessage(
-                    `Incident for monitor ${incident.monitorName} has started ${Math.round(duration / 1000 / 60)} minutes ago.`,
+                    `Un incident pour la sonde "${incident.monitorName}" a commencé il y a ${readableDuration}.`,
                 );
                 if (hasSucceeded) {
                     await incidentRepository.update(incident.id, { hasBeenNotified: true });
                 }
             }
+        }
+    }
+
+    function convertMillisecondsToReadableDuration(milliseconds: number): string {
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        if (hours > 0) {
+            return `${hours} heures et ${remainingMinutes} minute(s)`;
+        } else {
+            return `${remainingMinutes} minute(s)`;
         }
     }
 }
