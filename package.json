@@ -34,12 +34,12 @@
         "dotenv": "^16.0.3",
         "express": "^4.21.2",
         "http-status": "^1.6.2",
-        "joi": "^17.13.3",
         "jsonwebtoken": "^9.0.2",
         "matrix-bot-sdk": "^0.8.0",
         "pg": "^8.22.0",
         "pg-connection-string": "^2.14.0",
-        "typeorm": "^0.3.16"
+        "typeorm": "^0.3.16",
+        "zod": "^4.6.7"
     },
     "engines": {
         "node": "^26.13.1"

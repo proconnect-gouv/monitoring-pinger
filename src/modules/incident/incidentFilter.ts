@@ -1,49 +1,36 @@
+import { z } from "zod";
+
+const TIME_ZONE = "Europe/Paris";
+
+const timeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'must be formatted as "HH:MM"');
+
 // An incident filter raises the notification threshold of one monitor for the incidents
 // starting in a daily window (Europe/Paris time). It is used to silence known, recurring
 // incidents (e.g. a nightly maintenance job) while still being notified if they last too long.
-type IncidentFilter = {
-  monitorId: number;
-  minutes: number;
-  from: string; // "HH:MM", included
-  to: string; // "HH:MM", excluded
-};
+const incidentFilterSchema = z
+  .object({
+    monitorId: z.number().int(),
+    minutes: z.number().positive(),
+    from: timeSchema, // "HH:MM", included
+    to: timeSchema, // "HH:MM", excluded
+  })
+  .refine((filter) => filter.from < filter.to, {
+    message:
+      '"from" must be before "to" (windows crossing midnight are not supported)',
+  });
 
-const TIME_ZONE = "Europe/Paris";
-const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+const incidentFiltersSchema = z.array(incidentFilterSchema);
+
+type IncidentFilter = z.infer<typeof incidentFilterSchema>;
 
 function parseIncidentFilters(rawValue: string): IncidentFilter[] {
-  const value: unknown = JSON.parse(rawValue);
-  if (!Array.isArray(value)) {
-    throw new Error("INCIDENT_FILTERS must be a JSON array");
+  const result = incidentFiltersSchema.safeParse(JSON.parse(rawValue));
+  if (!result.success) {
+    throw new Error(z.prettifyError(result.error));
   }
-  return value.map((item, index) => {
-    if (
-      typeof item !== "object" ||
-      item === null ||
-      !Number.isInteger(item.monitorId) ||
-      typeof item.minutes !== "number" ||
-      !(item.minutes > 0) ||
-      typeof item.from !== "string" ||
-      !TIME_PATTERN.test(item.from) ||
-      typeof item.to !== "string" ||
-      !TIME_PATTERN.test(item.to)
-    ) {
-      throw new Error(
-        `INCIDENT_FILTERS[${index}] must look like {"monitorId": 123, "minutes": 120, "from": "03:30", "to": "04:30"}`,
-      );
-    }
-    if (item.from >= item.to) {
-      throw new Error(
-        `INCIDENT_FILTERS[${index}]: "from" must be before "to" (windows crossing midnight are not supported)`,
-      );
-    }
-    return {
-      monitorId: item.monitorId,
-      minutes: item.minutes,
-      from: item.from,
-      to: item.to,
-    };
-  });
+  return result.data;
 }
 
 // An invalid configuration must never make us miss alerts: we fall back to no filter at all.
