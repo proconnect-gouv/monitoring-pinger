@@ -17,4 +17,4 @@ class NotFoundError extends AppError {
   public statusCode = httpStatus.NOT_FOUND;
 }
 
-export { NotFoundError, AppError };
+export { AppError, NotFoundError };

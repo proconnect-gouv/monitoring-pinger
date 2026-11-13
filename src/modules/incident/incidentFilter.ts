@@ -96,5 +96,5 @@ function getThresholdMinutes(
   return { minutes: filter ? filter.minutes : defaultMinutes, filter };
 }
 
-export { loadIncidentFilters, getThresholdMinutes };
+export { getThresholdMinutes, loadIncidentFilters };
 export type { IncidentFilter };
