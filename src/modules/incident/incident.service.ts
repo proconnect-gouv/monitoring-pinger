@@ -5,8 +5,7 @@ import { Incident } from './incident.entity';
 import { config } from '../../config';
 import { notificationService } from '../../lib/notification';
 import { logger } from '../../lib/logger';
-
-const INCIDENT_DURATION_THRESHOLD = config.INCIDENT_MINUTES_THRESHOLD * 60 * 1000;
+import { getThresholdMinutes } from './incidentFilter';
 
 function buildIncidentService() {
     const incidentRepository = dataSource.getRepository(Incident);
@@ -61,17 +60,24 @@ function buildIncidentService() {
                     const duration =
                         new Date(incidentEndTime).getTime() -
                         new Date(ongoingIncident.startedAt).getTime();
-                    if (duration > INCIDENT_DURATION_THRESHOLD) {
+                    const threshold = getIncidentThreshold(ongoingIncident);
+                    if (duration > threshold.minutes * 60 * 1000) {
                         const readableDuration = convertMillisecondsToReadableDuration(duration);
 
                         await notificationService.postMessage(
                             `L'incident pour la sonde "${ongoingIncident.monitorName}" est maintenant résolu. Il a duré ${readableDuration}.`,
                         );
+                    } else if (threshold.filter) {
+                        logger.info(
+                            `Incident for monitor ${ongoingIncident.monitorName} (id ${ongoingIncident.monitorId}) is now resolved. It lasted ${Math.round(
+                                duration / 1000 / 60,
+                            )} minutes. No notification sent because it was filtered: below the threshold of ${threshold.minutes} minutes for incidents starting between ${threshold.filter.from} and ${threshold.filter.to}.`,
+                        );
                     } else {
                         logger.info(
                             `Incident for monitor ${ongoingIncident.monitorName} is now resolved. It lasted ${Math.round(
                                 duration / 1000 / 60,
-                            )} minutes. No notification sent because it was below the threshold (${config.INCIDENT_MINUTES_THRESHOLD} minutes).`,
+                            )} minutes. No notification sent because it was below the threshold (${threshold.minutes} minutes).`,
                         );
                     }
                 } else {
@@ -89,7 +95,7 @@ function buildIncidentService() {
         });
         for (const incident of ongoingIncidents) {
             const duration = new Date().getTime() - new Date(incident.startedAt).getTime();
-            if (duration > INCIDENT_DURATION_THRESHOLD) {
+            if (duration > getIncidentThreshold(incident).minutes * 60 * 1000) {
                 const readableDuration = convertMillisecondsToReadableDuration(duration);
                 const hasSucceeded = await notificationService.postMessage(
                     `Un incident pour la sonde "${incident.monitorName}" a commencé il y a ${readableDuration}.`,
@@ -99,6 +105,14 @@ function buildIncidentService() {
                 }
             }
         }
+    }
+
+    function getIncidentThreshold(incident: Incident) {
+        return getThresholdMinutes(
+            incident,
+            config.INCIDENT_FILTERS,
+            config.INCIDENT_MINUTES_THRESHOLD,
+        );
     }
 
     function convertMillisecondsToReadableDuration(milliseconds: number): string {
