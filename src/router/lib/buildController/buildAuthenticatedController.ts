@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
-import Joi from "joi";
+import { z } from "zod";
 import { AppError } from "../../../lib/errors";
 import { logger } from "../../../lib/logger";
 import { assertIsAuthenticated } from "./assertIsAuthenticated";
@@ -20,7 +20,7 @@ function buildAuthenticatedController<
     file?: { buffer: Buffer; fileName: string };
   }) => resultT | Promise<resultT>,
   options?: {
-    schema?: Joi.Schema;
+    schema?: z.ZodType;
   },
 ) {
   return async (req: Request, res: Response) => {
@@ -33,10 +33,10 @@ function buildAuthenticatedController<
     }
 
     if (options?.schema) {
-      const { error } = options.schema.validate(req.body);
-      if (error) {
-        logger.error(error);
-        res.status(httpStatus.BAD_REQUEST).send(error.message);
+      const result = options.schema.safeParse(req.body);
+      if (!result.success) {
+        logger.error(result.error);
+        res.status(httpStatus.BAD_REQUEST).send(z.prettifyError(result.error));
         return;
       }
     }
