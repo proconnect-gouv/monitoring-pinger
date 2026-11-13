@@ -6,7 +6,7 @@
     "scripts": {
         "build": "tsc",
         "start": "node dist",
-        "startDev": "nodemon",
+        "startDev": "node --watch --require ts-node/register ./index.ts",
         "migration:generate": "typeorm migration:generate -d dist/src/dataSource.js src/migrations/$npm_config_name",
         "migration:run": "typeorm migration:run -d dist/src/dataSource.js",
         "typeorm": "typeorm-ts-node-esm",
@@ -18,7 +18,6 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "nodemon": "^3.1.4",
         "prettier": "^3.10.1",
         "prettier-plugin-organize-imports": "^4.3.0",
         "ts-node": "^10.9.1",
