@@ -16,5 +16,5 @@ jobs:
           node-version-file: package.json
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit
+      - run: npm run lint
       - run: npm test

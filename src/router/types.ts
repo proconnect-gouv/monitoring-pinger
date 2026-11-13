@@ -1,14 +1,14 @@
-import Joi from 'joi';
-import { authenticatedControllerType } from './lib/buildController/types';
-import { RequestHandler } from 'express';
+import { RequestHandler } from "express";
+import Joi from "joi";
+import { authenticatedControllerType } from "./lib/buildController/types";
 
-type methodType = 'get' | 'post' | 'put' | 'patch' | 'delete';
+type methodType = "get" | "post" | "put" | "patch" | "delete";
 type routeType<paramsT, queryT, bodyT> = {
-    method: methodType;
-    middlewares?: RequestHandler[];
-    path: string;
-    controller: authenticatedControllerType<paramsT, queryT, bodyT>;
-    schema?: Joi.Schema;
+  method: methodType;
+  middlewares?: RequestHandler[];
+  path: string;
+  controller: authenticatedControllerType<paramsT, queryT, bodyT>;
+  schema?: Joi.Schema;
 };
 
 export type { routeType };

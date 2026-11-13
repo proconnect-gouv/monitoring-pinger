@@ -1,58 +1,62 @@
-import dotenv from 'dotenv';
-import pgConnectionString from 'pg-connection-string';
-import { IncidentFilter, loadIncidentFilters } from './modules/incident/incidentFilter';
-import { logger } from './lib/logger';
+import dotenv from "dotenv";
+import pgConnectionString from "pg-connection-string";
+import { logger } from "./lib/logger";
+import {
+  IncidentFilter,
+  loadIncidentFilters,
+} from "./modules/incident/incidentFilter";
 
 dotenv.config();
 
 const databaseConfig = {} as {
-    DATABASE_PORT: number;
-    DATABASE_HOST: string;
-    DATABASE_NAME: string;
-    DATABASE_USER: string;
-    DATABASE_PASSWORD: string;
+  DATABASE_PORT: number;
+  DATABASE_HOST: string;
+  DATABASE_NAME: string;
+  DATABASE_USER: string;
+  DATABASE_PASSWORD: string;
 };
 
 if (process.env.DATABASE_URL) {
-    const infos = pgConnectionString.parse(process.env.DATABASE_URL);
-    databaseConfig.DATABASE_PORT = infos.port ? Number(infos.port) : 5432;
-    databaseConfig.DATABASE_HOST = infos.host || '';
-    databaseConfig.DATABASE_NAME = infos.database || '';
-    databaseConfig.DATABASE_USER = infos.user || '';
-    databaseConfig.DATABASE_PASSWORD = infos.password || '';
+  const infos = pgConnectionString.parse(process.env.DATABASE_URL);
+  databaseConfig.DATABASE_PORT = infos.port ? Number(infos.port) : 5432;
+  databaseConfig.DATABASE_HOST = infos.host || "";
+  databaseConfig.DATABASE_NAME = infos.database || "";
+  databaseConfig.DATABASE_USER = infos.user || "";
+  databaseConfig.DATABASE_PASSWORD = infos.password || "";
 } else {
-    databaseConfig.DATABASE_HOST = process.env.DATABASE_HOST || '';
-    databaseConfig.DATABASE_PASSWORD = process.env.DATABASE_PASSWORD || '';
-    databaseConfig.DATABASE_USER = process.env.DATABASE_USER || '';
-    databaseConfig.DATABASE_NAME = process.env.DATABASE_NAME || '';
-    databaseConfig.DATABASE_PORT = process.env.DATABASE_PORT
-        ? Number(process.env.DATABASE_PORT)
-        : 5432;
+  databaseConfig.DATABASE_HOST = process.env.DATABASE_HOST || "";
+  databaseConfig.DATABASE_PASSWORD = process.env.DATABASE_PASSWORD || "";
+  databaseConfig.DATABASE_USER = process.env.DATABASE_USER || "";
+  databaseConfig.DATABASE_NAME = process.env.DATABASE_NAME || "";
+  databaseConfig.DATABASE_PORT = process.env.DATABASE_PORT
+    ? Number(process.env.DATABASE_PORT)
+    : 5432;
 }
 
 const DEFAULT_INCIDENT_FILTERS: IncidentFilter[] = [
-    // FI OpenDesk goes down every night at 03:52 for ~30 minutes
-    { monitorId: 797674539, minutes: 120, from: '03:30', to: '04:30' },
+  // FI OpenDesk goes down every night at 03:52 for ~30 minutes
+  { monitorId: 797674539, minutes: 120, from: "03:30", to: "04:30" },
 ];
 
 const config = {
-    PORT: process.env.PORT || 3000,
-    UPTIME_ROBOT_API_KEY: process.env.UPTIME_ROBOT_API_KEY || '',
-    MATRIX_DOMAIN: process.env.MATRIX_DOMAIN || '',
-    MATRIX_SERVER_URL: process.env.MATRIX_SERVER_URL || '',
-    DEFAULT_ROOM_ID: process.env.DEFAULT_ROOM_ID || '',
-    TCHAP_USERNAME: process.env.TCHAP_USERNAME || '',
-    TCHAP_PASSWORD: process.env.TCHAP_PASSWORD || '',
-    SENSITIVE_MONITOR_GROUP: process.env.SENSITIVE_MONITOR_GROUP || 'ProConnect services',
-    INCIDENT_MINUTES_THRESHOLD: process.env.INCIDENT_MINUTES_THRESHOLD
-        ? Number(process.env.INCIDENT_MINUTES_THRESHOLD)
-        : 5,
-    INCIDENT_FILTERS: loadIncidentFilters(
-        process.env.INCIDENT_FILTERS,
-        DEFAULT_INCIDENT_FILTERS,
-        logger.error,
-    ),
-    ...databaseConfig,
+  PORT: process.env.PORT || 3000,
+  UPTIME_ROBOT_API_KEY: process.env.UPTIME_ROBOT_API_KEY || "",
+  MATRIX_DOMAIN: process.env.MATRIX_DOMAIN || "",
+  MATRIX_SERVER_URL: process.env.MATRIX_SERVER_URL || "",
+  DEFAULT_ROOM_ID: process.env.DEFAULT_ROOM_ID || "",
+  TCHAP_USERNAME: process.env.TCHAP_USERNAME || "",
+  TCHAP_PASSWORD: process.env.TCHAP_PASSWORD || "",
+  SENSITIVE_MONITOR_GROUP:
+    process.env.SENSITIVE_MONITOR_GROUP || "ProConnect services",
+  INCIDENT_MINUTES_THRESHOLD: process.env.INCIDENT_MINUTES_THRESHOLD
+    ? Number(process.env.INCIDENT_MINUTES_THRESHOLD)
+    : 5,
+  INCIDENT_FILTERS: loadIncidentFilters(
+    process.env.INCIDENT_FILTERS,
+    DEFAULT_INCIDENT_FILTERS,
+    logger.error,
+  ),
+  ...databaseConfig,
 };
 
 export { config };

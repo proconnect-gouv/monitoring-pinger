@@ -1,3 +1,3 @@
-import { buildAuthenticatedController } from './buildAuthenticatedController';
+import { buildAuthenticatedController } from "./buildAuthenticatedController";
 
 export { buildAuthenticatedController };
