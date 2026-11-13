@@ -1,21 +1,25 @@
-import Express, { RequestHandler } from 'express';
-import { buildAuthenticatedController } from './lib/buildController';
-import { routes } from './routes';
+import Express, { RequestHandler } from "express";
+import { buildAuthenticatedController } from "./lib/buildController";
+import { routes } from "./routes";
 
 const router = buildRouter();
 
 function buildRouter() {
-    const router = Express.Router();
-    for (const route of routes) {
-        let builtController: RequestHandler;
-        builtController = buildAuthenticatedController(route.controller, {
-            schema: route.schema,
-        });
+  const router = Express.Router();
+  for (const route of routes) {
+    let builtController: RequestHandler;
+    builtController = buildAuthenticatedController(route.controller, {
+      schema: route.schema,
+    });
 
-        router[route.method](route.path, [...(route.middlewares || [])], builtController);
-    }
+    router[route.method](
+      route.path,
+      [...(route.middlewares || [])],
+      builtController,
+    );
+  }
 
-    return router;
+  return router;
 }
 
 export { router };

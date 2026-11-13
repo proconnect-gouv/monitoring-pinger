@@ -1,3 +1,3 @@
-import { runApp } from './app';
+import { runApp } from "./app";
 
 export { runApp };
