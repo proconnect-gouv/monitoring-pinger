@@ -14,15 +14,20 @@ const databaseConfig = {} as {
   DATABASE_NAME: string;
   DATABASE_USER: string;
   DATABASE_PASSWORD: string;
+  DATABASE_USE_SSL: boolean;
 };
 
 if (process.env.DATABASE_URL) {
-  const infos = pgConnectionString.parse(process.env.DATABASE_URL);
+  const infos = pgConnectionString.parse(process.env.DATABASE_URL, {
+    useLibpqCompat: true,
+  });
   databaseConfig.DATABASE_PORT = infos.port ? Number(infos.port) : 5432;
   databaseConfig.DATABASE_HOST = infos.host || "";
   databaseConfig.DATABASE_NAME = infos.database || "";
   databaseConfig.DATABASE_USER = infos.user || "";
   databaseConfig.DATABASE_PASSWORD = infos.password || "";
+  databaseConfig.DATABASE_USE_SSL =
+    typeof infos.sslmode === "string" && infos.sslmode !== "disable";
 } else {
   databaseConfig.DATABASE_HOST = process.env.DATABASE_HOST || "";
   databaseConfig.DATABASE_PASSWORD = process.env.DATABASE_PASSWORD || "";
@@ -31,6 +36,7 @@ if (process.env.DATABASE_URL) {
   databaseConfig.DATABASE_PORT = process.env.DATABASE_PORT
     ? Number(process.env.DATABASE_PORT)
     : 5432;
+  databaseConfig.DATABASE_USE_SSL = process.env.DATABASE_USE_SSL === "true";
 }
 
 const DEFAULT_INCIDENT_FILTERS: IncidentFilter[] = [
