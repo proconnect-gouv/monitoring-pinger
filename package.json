@@ -24,11 +24,11 @@
         "typescript": "^5.9.3"
     },
     "dependencies": {
-        "@types/cors": "^2.8.17",
+        "@types/cors": "^2.8.19",
         "@types/express": "^4.17.13",
         "@types/node": "^26.6.6",
         "body-parser": "^1.20.9",
-        "cors": "^2.8.5",
+        "cors": "^2.8.6",
         "cron": "^4.4.0",
         "dotenv": "^16.6.1",
         "express": "^4.21.2",
