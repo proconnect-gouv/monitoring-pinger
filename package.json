@@ -36,7 +36,7 @@
         "jsonwebtoken": "^9.0.2",
         "matrix-bot-sdk": "^0.8.0",
         "pg": "^8.22.0",
-        "pg-connection-string": "^2.14.0",
+        "pg-connection-string": "^2.14.1",
         "typeorm": "^0.3.31",
         "zod": "^4.6.7"
     },
