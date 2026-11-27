@@ -32,7 +32,7 @@ function buildIncidentService() {
 
         if (isSensitiveMonitor) {
           await notificationService.postMessage(
-            `**Un incident pour la sonde sensible "${incidentDto.monitorFriendlyName}" (${incidentDto.monitorGroup}) a commencé.** Cause : ${incidentDto.alertDetails}`,
+            `**Un incident pour la sonde sensible "${incidentDto.monitorFriendlyName}" (${incidentDto.monitorGroup}) a commencé à ${formatParisTime(newIncident.startedAt)}.** Cause : ${incidentDto.alertDetails}`,
           );
           newIncident.hasBeenNotified = true;
         } else {
@@ -118,6 +118,16 @@ function buildIncidentService() {
       config.INCIDENT_FILTERS,
       config.INCIDENT_MINUTES_THRESHOLD,
     );
+  }
+
+  function formatParisTime(date: string): string {
+    return new Intl.DateTimeFormat("fr-FR", {
+      timeZone: "Europe/Paris",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    }).format(new Date(date));
   }
 
   function convertMillisecondsToReadableDuration(milliseconds: number): string {
